@@ -1,7 +1,7 @@
 {
   "name": "my-pdf-signer",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,7 +13,6 @@
     "@tailwindcss/vite": "^4.3.2",
     "idb": "^8.0.3",
     "pdf-lib": "^1.17.1",
-    "pdfjs-dist": "^6.1.200",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-pdf": "^10.4.1",

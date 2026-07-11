@@ -1,32 +1,171 @@
+import { useEffect, useState } from "react";
+import PdfUploader from "./components/PdfUploader/PdfUploader";
+import PdfViewer from "./components/PdfViewer/PdfViewer";
+import SignatureManager from "./components/SignatureManager/SignatureManager";
+import { usePdfFile } from "./hooks/usePdfFile";
+import { useSignatureAsset } from "./hooks/useSignatureAsset";
+
 function App() {
-  const error: string | null = null
+  const { pdf, error, loadPdf, setPageCount, handleError, resetPdf } =
+    usePdfFile();
+  const { signature, loadSignature, removeSignature } = useSignatureAsset();
+  const [showSignature, setShowSignature] = useState(false);
+
+  useEffect(() => {
+    if (!showSignature) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setShowSignature(false);
+    };
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [showSignature]);
+
+  const signaturePanel = (
+    <SignatureManager
+      signature={signature}
+      onSignatureUpload={loadSignature}
+      onSignatureRemove={removeSignature}
+    />
+  );
 
   return (
-    <div className="flex flex-col min-h-screen max-w-[1200px] mx-auto p-5 box-border bg-[#f5f5f7] text-[#1d1d1f] antialiased font-sans">
-      <header className="text-center mb-8">
-        <h1 className="text-4xl font-bold m-0 mb-2">My PDF Signer</h1>
-        <p className="text-[#86868b] text-sm font-medium m-0">
-          Your document is processed locally and never uploaded.
-        </p>
-      </header>
+    <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f] antialiased">
+      <div className="mx-auto flex min-h-screen w-full max-w-360 flex-col px-3 py-5 sm:px-5 sm:py-7 lg:px-8">
+        <header className="mb-5 text-center sm:mb-7">
+          <h1 className="text-2xl font-bold tracking-tight sm:text-4xl">
+            My PDF Signer
+          </h1>
+          <p className="mt-1.5 text-xs font-medium text-[#86868b] sm:text-sm">
+            Your document is processed locally and never uploaded.
+          </p>
+        </header>
 
-      <main className="flex-1 bg-white rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.08)] p-8 flex flex-col items-center justify-center border border-[#d2d2d7]">
-        {error && (
-          <div className="bg-[#ffebeb] text-[#ff3b30] border border-[#ffcccc] px-5 py-3 rounded-lg mb-5 w-full box-border">
-            {error}
+        <main className="flex-1 rounded-xl border border-[#d2d2d7] bg-white p-3 shadow-[0_4px_12px_rgba(0,0,0,0.08)] sm:p-5 lg:p-7">
+          {error && (
+            <div className="mb-5 w-full rounded-lg border border-[#ffcccc] bg-[#ffebeb] px-4 py-3 text-sm text-[#ff3b30] sm:px-5">
+              <p>{error}</p>
+              <button
+                onClick={resetPdf}
+                className="mt-2 underline hover:no-underline"
+              >
+                Try a different file
+              </button>
+            </div>
+          )}
+
+          <div className="grid min-w-0 grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-7">
+            <section className="min-w-0">
+              {!pdf ? (
+                <PdfUploader onPdfUpload={loadPdf} />
+              ) : (
+                <>
+                  <div className="mb-4 flex min-w-0 items-center gap-3 border-b border-gray-200 pb-4">
+                    <svg
+                      className="h-5 w-5 shrink-0 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                      />
+                    </svg>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-gray-700">
+                        {pdf.file.name}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {pdf.pageCount} {pdf.pageCount === 1 ? "page" : "pages"}
+                      </p>
+                    </div>
+                    <button
+                      onClick={resetPdf}
+                      className="shrink-0 rounded-md px-2 py-1 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                    >
+                      Reset
+                    </button>
+                  </div>
+                  <PdfViewer
+                    file={pdf.objectUrl}
+                    pageCount={pdf.pageCount}
+                    onLoadSuccess={setPageCount}
+                    onLoadError={() =>
+                      handleError(
+                        "Unable to read this PDF. Make sure the file is valid and not password-protected.",
+                      )
+                    }
+                  />
+                </>
+              )}
+            </section>
+
+            <aside className="hidden min-w-0 lg:block">
+              <div className="sticky top-5">{signaturePanel}</div>
+            </aside>
           </div>
-        )}
+        </main>
 
-        <div className="text-center text-[#86868b]">
-          <p>Phase 1 Setup Complete. Ready for PDF and Signature components.</p>
+        <footer className="py-5 text-center text-xs text-[#86868b]">
+          My PDF Signer — Privacy-First
+        </footer>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setShowSignature(true)}
+        aria-haspopup="dialog"
+        className="fixed right-4 bottom-4 z-40 flex items-center gap-2 rounded-full bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-lg hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 lg:hidden"
+      >
+        <span aria-hidden="true">+</span>
+        {signature ? "Signature ready" : "Add signature"}
+      </button>
+
+      {showSignature && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/45 p-3 sm:items-center sm:p-5 lg:hidden"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setShowSignature(false);
+          }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="signature-dialog-title"
+            className="max-h-[85dvh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl sm:p-6"
+          >
+            <div className="mb-4 flex items-center justify-between gap-4 border-b border-gray-200 pb-3">
+              <h2
+                id="signature-dialog-title"
+                className="text-lg font-semibold text-gray-800"
+              >
+                Signature settings
+              </h2>
+              <button
+                type="button"
+                onClick={() => setShowSignature(false)}
+                aria-label="Close signature settings"
+                className="rounded-full px-3 py-1.5 text-xl leading-none text-gray-500 hover:bg-gray-100 hover:text-gray-800"
+              >
+                ×
+              </button>
+            </div>
+            {signaturePanel}
+          </section>
         </div>
-      </main>
-
-      <footer className="text-center py-5 text-[#86868b] text-xs">
-        <p className="m-0">Local PDF Signer — Privacy-First</p>
-      </footer>
+      )}
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
