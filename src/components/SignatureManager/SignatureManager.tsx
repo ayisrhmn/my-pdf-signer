@@ -62,35 +62,35 @@ export default function SignatureManager({
 
   return (
     <div className="w-full">
-      <h2 className="text-base font-semibold text-gray-700 mb-3">
+      <h2 className="text-base font-semibold text-ink mb-3">
         Signature
       </h2>
 
       {signature ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <div className="border-2 border-ink bg-paper p-4 shadow-[3px_3px_0_#241B35]">
           <div className="flex items-center gap-4">
             <img
               src={signature.objectUrl}
               alt={signature.fileName}
               decoding="async"
-              className="max-h-16 max-w-24 object-contain rounded border border-gray-100"
+              className="max-h-16 max-w-24 object-contain border-2 border-ink/20"
             />
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-gray-700 truncate">
+              <p className="text-sm text-ink truncate">
                 {signature.fileName}
               </p>
               <div className="flex gap-3 mt-2">
                 <button
                   onClick={() => inputRef.current?.click()}
                   disabled={disabled}
-                  className="text-xs text-blue-600 hover:text-blue-700 underline disabled:text-gray-300 disabled:cursor-not-allowed"
+                  className="text-xs text-cyan font-semibold underline disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Replace
                 </button>
                 <button
                   onClick={onSignatureRemove}
                   disabled={disabled}
-                  className="text-xs text-red-500 hover:text-red-600 underline disabled:text-gray-300 disabled:cursor-not-allowed"
+                  className="text-xs text-coral font-semibold underline disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Remove
                 </button>
@@ -100,12 +100,12 @@ export default function SignatureManager({
         </div>
       ) : (
         <div
-          className={`rounded-xl border-2 border-dashed p-4 text-center transition-colors ${
+          className={`border-2 border-ink/30 p-4 text-center transition-all ${
             disabled
-              ? "border-gray-200 bg-gray-50 cursor-not-allowed"
+              ? "bg-lavender/50 cursor-not-allowed opacity-50"
               : isDragOver
-                ? "border-blue-400 bg-blue-50 cursor-pointer"
-                : "border-gray-300 bg-white hover:border-gray-400 cursor-pointer"
+                ? "bg-cyan/10 border-ink shadow-[3px_3px_0_#241B35] -translate-x-[1px] -translate-y-[1px] cursor-pointer"
+                : "bg-paper shadow-[3px_3px_0_#241B35] hover:shadow-[1px_1px_0_#241B35] hover:translate-x-[2px] hover:translate-y-[2px] cursor-pointer"
           }`}
           onClick={() => {
             if (!disabled) inputRef.current?.click();
@@ -123,15 +123,15 @@ export default function SignatureManager({
           aria-label={disabled ? "Upload PDF first" : "Upload signature image"}
         >
           {disabled ? (
-            <p className="text-sm text-gray-400 mb-1">
+            <p className="text-sm text-ink/50 mb-1">
               Upload a PDF first
             </p>
           ) : (
             <>
-              <p className="text-sm text-gray-500 mb-1">
+              <p className="text-sm text-ink/70 mb-1 font-medium">
                 Drop your signature image here
               </p>
-              <p className="text-xs text-gray-400">PNG or JPEG, max 5 MB</p>
+              <p className="text-xs text-ink/50">PNG or JPEG, max 5 MB</p>
             </>
           )}
         </div>
@@ -146,7 +146,7 @@ export default function SignatureManager({
       />
 
       {validationError && (
-        <p className="mt-2 text-xs text-red-500">
+        <p className="mt-2 text-xs text-coral font-medium">
           {getSignatureErrorMessage(validationError)}
         </p>
       )}

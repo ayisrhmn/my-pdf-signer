@@ -1,1 +1,11 @@
 @import "tailwindcss";
+
+@theme {
+  --color-ink: #241B35;
+  --color-paper: #FFFDF5;
+  --color-lavender: #E9E2FF;
+  --color-cyan: #36C5F0;
+  --color-yellow: #FFD84D;
+  --color-coral: #FF6B6B;
+  --color-green: #39B86B;
+}

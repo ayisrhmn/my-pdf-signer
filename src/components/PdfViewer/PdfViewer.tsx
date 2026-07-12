@@ -41,6 +41,8 @@ export default function PdfViewer({
 }: Props) {
   const activePageChangeRef = useRef(onActivePageChange);
   const pageDimensionsRef = useRef(onPageDimensions);
+  const wrapperElementsRef = useRef<Record<number, HTMLDivElement>>({});
+  const canvasElementsRef = useRef<Record<number, HTMLDivElement>>({});
 
   activePageChangeRef.current = onActivePageChange;
   pageDimensionsRef.current = onPageDimensions;
@@ -85,15 +87,29 @@ export default function PdfViewer({
     };
   }, [intersectionObserver, resizeObserver]);
 
-  const wrapperRef = useCallback((el: HTMLDivElement | null) => {
+  const wrapperRef = useCallback((el: HTMLDivElement | null, pageIndex: number) => {
     if (el) {
       intersectionObserver.observe(el);
+      wrapperElementsRef.current[pageIndex] = el;
+    } else {
+      const prevEl = wrapperElementsRef.current[pageIndex];
+      if (prevEl) {
+        intersectionObserver.unobserve(prevEl);
+        delete wrapperElementsRef.current[pageIndex];
+      }
     }
   }, [intersectionObserver]);
 
-  const canvasRef = useCallback((el: HTMLDivElement | null) => {
+  const canvasRef = useCallback((el: HTMLDivElement | null, pageIndex: number) => {
     if (el) {
       resizeObserver.observe(el);
+      canvasElementsRef.current[pageIndex] = el;
+    } else {
+      const prevEl = canvasElementsRef.current[pageIndex];
+      if (prevEl) {
+        resizeObserver.unobserve(prevEl);
+        delete canvasElementsRef.current[pageIndex];
+      }
     }
   }, [resizeObserver]);
 
@@ -104,12 +120,12 @@ export default function PdfViewer({
       onLoadSuccess={({ numPages }) => onLoadSuccess(numPages)}
       onLoadError={onLoadError}
       loading={
-        <div className="flex items-center justify-center py-20 text-gray-500">
+        <div className="flex items-center justify-center py-20 text-ink/50">
           Loading PDF...
         </div>
       }
       error={
-        <div className="flex items-center justify-center py-20 text-red-500">
+        <div className="flex items-center justify-center py-20 text-coral">
           Unable to read this PDF.
         </div>
       }
@@ -117,19 +133,19 @@ export default function PdfViewer({
       {Array.from({ length: pageCount }, (_, pageIndex) => (
         <div
           key={pageIndex}
-          ref={wrapperRef}
+          ref={(el) => wrapperRef(el, pageIndex)}
           data-page-index={pageIndex}
           data-page-layer="wrapper"
           className="mb-6 flex min-w-0 flex-col items-center last:mb-0 sm:mb-8"
         >
-          <div className="mb-2 text-sm font-medium text-gray-400">
+          <div className="mb-2 inline-block border border-ink/20 bg-paper px-2 py-0.5 text-xs font-medium text-ink/60">
             Page {pageIndex + 1} of {pageCount}
           </div>
           <div
-            ref={canvasRef}
+            ref={(el) => canvasRef(el, pageIndex)}
             data-page-index={pageIndex}
             data-page-layer="canvas"
-            className="relative w-full overflow-hidden rounded-sm shadow-[0_2px_8px_rgba(0,0,0,0.12)] [&_canvas]:h-auto! [&_canvas]:max-w-full!"
+            className="relative w-full overflow-hidden shadow-[3px_3px_0_#241B35] [&_canvas]:h-auto! [&_canvas]:max-w-full!"
             style={{ maxWidth: MAX_PAGE_PREVIEW_WIDTH }}
           >
             <Page

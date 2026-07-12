@@ -49,10 +49,10 @@ export default function PdfUploader({ onPdfUpload }: Props) {
 
   return (
     <div
-      className={`w-full cursor-pointer rounded-xl border-2 border-dashed px-5 py-12 text-center transition-colors sm:px-8 sm:py-16 ${
+      className={`w-full cursor-pointer border-2 px-5 py-12 text-center transition-all sm:px-8 sm:py-16 ${
         isDragOver
-          ? "border-blue-400 bg-blue-50"
-          : "border-gray-300 bg-white hover:border-gray-400"
+          ? "border-ink bg-cyan/10 shadow-[4px_4px_0_#241B35] -translate-x-[1px] -translate-y-[1px]"
+          : "border-ink/30 bg-paper shadow-[4px_4px_0_#241B35] hover:shadow-[2px_2px_0_#241B35] hover:translate-x-[2px] hover:translate-y-[2px]"
       }`}
       onClick={() => inputRef.current?.click()}
       onDragOver={handleDragOver}
@@ -73,12 +73,17 @@ export default function PdfUploader({ onPdfUpload }: Props) {
         onChange={handleInputChange}
       />
 
-      <p className="text-lg font-medium text-gray-700 mb-1">
+      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center border-2 border-ink/40 bg-lavender">
+        <svg className="h-6 w-6 text-ink" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24" aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+        </svg>
+      </div>
+      <p className="text-lg font-semibold text-ink mb-1">
         Drop your PDF file here
       </p>
-      <p className="text-sm text-gray-400">or choose a file</p>
+      <p className="text-sm text-ink/50">or choose a file</p>
       {validationError && (
-        <p className="mt-3 text-sm text-red-500">
+        <p className="mt-3 text-sm text-coral font-medium">
           {getPdfErrorMessage(validationError)}
         </p>
       )}
