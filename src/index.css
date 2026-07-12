@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Pixelify Sans";
+  src: url("./assets/fonts/PixelifySans.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
   --color-ink: #241B35;
   --color-paper: #FFFDF5;
@@ -8,4 +16,5 @@
   --color-yellow: #FFD84D;
   --color-coral: #FF6B6B;
   --color-green: #39B86B;
+  --font-display: "Pixelify Sans", ui-sans-serif, system-ui, sans-serif;
 }

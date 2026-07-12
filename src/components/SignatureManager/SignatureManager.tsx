@@ -62,7 +62,7 @@ export default function SignatureManager({
 
   return (
     <div className="w-full">
-      <h2 className="text-base font-semibold text-ink mb-3">
+      <h2 className="font-display text-base font-semibold text-ink mb-3">
         Signature
       </h2>
 
@@ -79,18 +79,18 @@ export default function SignatureManager({
               <p className="text-sm text-ink truncate">
                 {signature.fileName}
               </p>
-              <div className="flex gap-3 mt-2">
+              <div className="flex gap-2 mt-2">
                 <button
                   onClick={() => inputRef.current?.click()}
                   disabled={disabled}
-                  className="text-xs text-cyan font-semibold underline disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="border-2 border-ink bg-cyan px-2.5 py-1 text-xs font-display font-semibold text-ink shadow-[2px_2px_0_#241B35] hover:bg-cyan/90 active:shadow-none active:translate-x-0.5 active:translate-y-0.5 focus-visible:ring-2 focus-visible:ring-yellow focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none disabled:active:translate-x-0 disabled:active:translate-y-0"
                 >
                   Replace
                 </button>
                 <button
                   onClick={onSignatureRemove}
                   disabled={disabled}
-                  className="text-xs text-coral font-semibold underline disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="border-2 border-ink bg-coral px-2.5 py-1 text-xs font-display font-semibold text-ink shadow-[2px_2px_0_#241B35] hover:bg-coral/90 active:shadow-none active:translate-x-0.5 active:translate-y-0.5 focus-visible:ring-2 focus-visible:ring-yellow focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none disabled:active:translate-x-0 disabled:active:translate-y-0"
                 >
                   Remove
                 </button>
@@ -100,12 +100,12 @@ export default function SignatureManager({
         </div>
       ) : (
         <div
-          className={`border-2 border-ink/30 p-4 text-center transition-all ${
+          className={`border-2 border-ink/30 p-4 text-center transition-all focus-visible:ring-2 focus-visible:ring-yellow focus-visible:outline-none ${
             disabled
               ? "bg-lavender/50 cursor-not-allowed opacity-50"
               : isDragOver
-                ? "bg-cyan/10 border-ink shadow-[3px_3px_0_#241B35] -translate-x-[1px] -translate-y-[1px] cursor-pointer"
-                : "bg-paper shadow-[3px_3px_0_#241B35] hover:shadow-[1px_1px_0_#241B35] hover:translate-x-[2px] hover:translate-y-[2px] cursor-pointer"
+                ? "bg-cyan/10 border-ink shadow-[3px_3px_0_#241B35] -translate-x-px -translate-y-px cursor-pointer"
+                : "bg-paper shadow-[3px_3px_0_#241B35] hover:shadow-[1px_1px_0_#241B35] hover:translate-x-0.5 hover:translate-y-0.5 cursor-pointer"
           }`}
           onClick={() => {
             if (!disabled) inputRef.current?.click();
@@ -117,8 +117,10 @@ export default function SignatureManager({
           tabIndex={disabled ? -1 : 0}
           aria-disabled={disabled}
           onKeyDown={(e) => {
-            if (!disabled && (e.key === "Enter" || e.key === " "))
+            if (!disabled && (e.key === "Enter" || e.key === " ")) {
+              e.preventDefault();
               inputRef.current?.click();
+            }
           }}
           aria-label={disabled ? "Upload PDF first" : "Upload signature image"}
         >
@@ -146,7 +148,7 @@ export default function SignatureManager({
       />
 
       {validationError && (
-        <p className="mt-2 text-xs text-coral font-medium">
+        <p role="alert" className="mt-2 text-xs text-coral font-medium">
           {getSignatureErrorMessage(validationError)}
         </p>
       )}

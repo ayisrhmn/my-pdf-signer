@@ -233,3 +233,39 @@ Choose one direction:
 2. **Arcade pixel:** stronger color blocks, checker accents, pronounced button states, and more energetic contrast.
 
 The recommended default is **soft pixel** because this is a document utility, not a game. It gives the project character without making the signing workspace noisy.
+
+## Local Pixel Typography Plan
+
+### Context
+
+The redesigned interface has pixel-style colors, borders, and shadows, but its default system typography weakens the visual direction. Add a locally bundled Pixelify Sans display font to strengthen the pixel-art identity without reducing readability, introducing remote requests, or affecting PDF content.
+
+### Implementation
+
+1. **Bundle Pixelify Sans locally**
+   - Add `src/assets/fonts/PixelifySans.woff2` from the official upstream release.
+   - Add its OFL license and provenance as `src/assets/fonts/OFL.txt`.
+   - Do not add a package, runtime font loader, or remote font request.
+
+2. **Register one display-font utility**
+   - Update `src/index.css` with a single `@font-face` using the local WOFF2 asset, its actual weight range, and `font-display: swap`.
+   - Extend the existing Tailwind v4 `@theme` block with `--font-display`, falling back to the current system sans stack.
+   - Keep the application root and body font unchanged.
+
+3. **Apply the font selectively**
+   - Update `src/App.tsx` to apply `font-display` only to the “My PDF Signer” application heading and mobile “Signature settings” dialog heading.
+   - Update `src/components/PdfUploader/PdfUploader.tsx` to apply it only to the uploader hero prompt.
+   - Preserve system sans for controls, instructions, privacy text, errors, filenames, page labels, statuses, the small Signature Manager heading, and rendered PDF content.
+   - Reassess tight tracking or line height only if Pixelify Sans clips or wraps poorly.
+
+### Verification
+
+- Run `bun run build` and `bun run lint`.
+- Confirm the production build emits the WOFF2 asset from the application's own origin.
+- Reload with the Network panel cleared and verify there are no Google Fonts, CDN, or other remote requests.
+- Confirm fallback text remains visible if the font request is blocked.
+- Check approximately `320px` mobile width for clipping, overlap, horizontal overflow, and collision with the dialog close control.
+- Confirm computed styles use Pixelify Sans only on the three intended display elements.
+- Confirm PDF and signature workflows remain local and unaffected.
+
+Skipped: global pixel typography, preload machinery, a font package, and a font-specific component. Add preload only if measurement shows visibly late font swapping.

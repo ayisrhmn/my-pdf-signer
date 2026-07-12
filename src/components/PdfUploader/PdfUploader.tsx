@@ -49,10 +49,10 @@ export default function PdfUploader({ onPdfUpload }: Props) {
 
   return (
     <div
-      className={`w-full cursor-pointer border-2 px-5 py-12 text-center transition-all sm:px-8 sm:py-16 ${
+      className={`w-full cursor-pointer border-2 px-5 py-12 text-center transition-all sm:px-8 sm:py-16 focus-visible:ring-2 focus-visible:ring-yellow focus-visible:outline-none ${
         isDragOver
-          ? "border-ink bg-cyan/10 shadow-[4px_4px_0_#241B35] -translate-x-[1px] -translate-y-[1px]"
-          : "border-ink/30 bg-paper shadow-[4px_4px_0_#241B35] hover:shadow-[2px_2px_0_#241B35] hover:translate-x-[2px] hover:translate-y-[2px]"
+          ? "border-ink bg-cyan/10 shadow-[4px_4px_0_#241B35] -translate-x-px -translate-y-px"
+          : "border-ink/30 bg-paper shadow-[4px_4px_0_#241B35] hover:shadow-[2px_2px_0_#241B35] hover:translate-x-0.5 hover:translate-y-0.5"
       }`}
       onClick={() => inputRef.current?.click()}
       onDragOver={handleDragOver}
@@ -61,7 +61,10 @@ export default function PdfUploader({ onPdfUpload }: Props) {
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") inputRef.current?.click();
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          inputRef.current?.click();
+        }
       }}
       aria-label="Upload PDF file"
     >
@@ -78,12 +81,12 @@ export default function PdfUploader({ onPdfUpload }: Props) {
           <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
         </svg>
       </div>
-      <p className="text-lg font-semibold text-ink mb-1">
+      <p className="font-display text-lg font-semibold text-ink mb-1">
         Drop your PDF file here
       </p>
       <p className="text-sm text-ink/50">or choose a file</p>
       {validationError && (
-        <p className="mt-3 text-sm text-coral font-medium">
+        <p role="alert" className="mt-3 text-sm text-coral font-medium">
           {getPdfErrorMessage(validationError)}
         </p>
       )}

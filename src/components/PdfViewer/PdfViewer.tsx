@@ -120,12 +120,12 @@ export default function PdfViewer({
       onLoadSuccess={({ numPages }) => onLoadSuccess(numPages)}
       onLoadError={onLoadError}
       loading={
-        <div className="flex items-center justify-center py-20 text-ink/50">
+        <div className="flex items-center justify-center border-2 border-ink/20 bg-paper py-20 text-ink/50 shadow-[3px_3px_0_#241B35]">
           Loading PDF...
         </div>
       }
       error={
-        <div className="flex items-center justify-center py-20 text-coral">
+        <div className="flex items-center justify-center border-2 border-ink bg-coral/10 py-20 text-coral shadow-[3px_3px_0_#241B35]">
           Unable to read this PDF.
         </div>
       }

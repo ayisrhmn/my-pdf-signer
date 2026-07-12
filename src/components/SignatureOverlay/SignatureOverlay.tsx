@@ -289,7 +289,11 @@ export default function SignatureOverlay({
               height: `${h}px`,
             }}
             onPointerDown={(e) => handlePointerDown(e, placement)}
-            className={`signature-placement cursor-move touch-none select-none ${
+            onFocus={() => onSelectPlacement(placement.id)}
+            tabIndex={0}
+            role="button"
+            aria-label="Signature placement. Use arrow keys to move, Shift plus arrow keys for larger steps, and Delete to remove."
+            className={`signature-placement cursor-move touch-none select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow ${
               isSelected
                 ? "shadow-[0_0_0_2px_#241B35,0_0_0_4px_#FFD84D]"
                 : "shadow-[0_0_0_1px_#241B35] hover:shadow-[0_0_0_2px_#241B35,0_0_0_3px_#36C5F0]"
@@ -311,7 +315,7 @@ export default function SignatureOverlay({
                     e.stopPropagation();
                     onRemovePlacement(placement.id);
                   }}
-                  className="absolute -top-3 -right-3 z-50 flex h-6 w-6 cursor-pointer items-center justify-center border-2 border-ink bg-coral text-sm text-white shadow-[2px_2px_0_#241B35] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]"
+                  className="absolute -top-3 -right-3 z-50 flex h-8 w-8 cursor-pointer items-center justify-center border-2 border-ink bg-coral text-base text-white shadow-[2px_2px_0_#241B35] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 focus-visible:ring-2 focus-visible:ring-yellow focus-visible:outline-none"
                   aria-label="Remove signature placement"
                 >
                   ×
@@ -322,7 +326,7 @@ export default function SignatureOverlay({
                     e.stopPropagation();
                     handlePointerDown(e, placement, "nw");
                   }}
-                  className="absolute -top-2 -left-2 h-4 w-4 border-2 border-ink bg-yellow cursor-nwse-resize z-40 touch-none"
+                  className="absolute -top-2.5 -left-2.5 h-5 w-5 border-2 border-ink bg-yellow cursor-nwse-resize z-40 touch-none"
                 />
                 <div
                   data-handle="ne"
@@ -330,7 +334,7 @@ export default function SignatureOverlay({
                     e.stopPropagation();
                     handlePointerDown(e, placement, "ne");
                   }}
-                  className="absolute -top-2 -right-2 h-4 w-4 border-2 border-ink bg-yellow cursor-nesw-resize z-40 touch-none"
+                  className="absolute -top-2.5 -right-2.5 h-5 w-5 border-2 border-ink bg-yellow cursor-nesw-resize z-40 touch-none"
                 />
                 <div
                   data-handle="sw"
@@ -338,7 +342,7 @@ export default function SignatureOverlay({
                     e.stopPropagation();
                     handlePointerDown(e, placement, "sw");
                   }}
-                  className="absolute -bottom-2 -left-2 h-4 w-4 border-2 border-ink bg-yellow cursor-nesw-resize z-40 touch-none"
+                  className="absolute -bottom-2.5 -left-2.5 h-5 w-5 border-2 border-ink bg-yellow cursor-nesw-resize z-40 touch-none"
                 />
                 <div
                   data-handle="se"
@@ -346,7 +350,7 @@ export default function SignatureOverlay({
                     e.stopPropagation();
                     handlePointerDown(e, placement, "se");
                   }}
-                  className="absolute -bottom-2 -right-2 h-4 w-4 border-2 border-ink bg-yellow cursor-nwse-resize z-40 touch-none"
+                  className="absolute -bottom-2.5 -right-2.5 h-5 w-5 border-2 border-ink bg-yellow cursor-nwse-resize z-40 touch-none"
                 />
               </>
             )}
