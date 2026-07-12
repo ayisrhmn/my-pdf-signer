@@ -1,7 +1,7 @@
 {
   "name": "my-pdf-signer",
-  "private": true,
   "version": "1.0.0",
+  "author": "Muhammad Fariz Rahman (https://github.com/ayisrhmn)",
   "type": "module",
   "scripts": {
     "dev": "vite",

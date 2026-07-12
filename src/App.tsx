@@ -351,7 +351,7 @@ function App() {
         </main>
 
         <footer className="py-5 text-center text-xs text-ink/50">
-          My PDF Signer — Privacy-First
+          &copy; {new Date().getFullYear()} Muhammad Fariz Rahman &mdash; My PDF Signer
         </footer>
       </div>
 
