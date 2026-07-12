@@ -4,4 +4,6 @@ export type SignatureAsset = {
   objectUrl: string;
   fileName: string;
   mimeType: string;
+  naturalWidth: number;
+  naturalHeight: number;
 };

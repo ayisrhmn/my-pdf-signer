@@ -1,38 +1,191 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import PdfUploader from "./components/PdfUploader/PdfUploader";
 import PdfViewer from "./components/PdfViewer/PdfViewer";
 import SignatureManager from "./components/SignatureManager/SignatureManager";
 import { usePdfFile } from "./hooks/usePdfFile";
 import { useSignatureAsset } from "./hooks/useSignatureAsset";
+import { useSignaturePlacement } from "./hooks/useSignaturePlacement";
+import { exportSignedPdf } from "./lib/exportSignedPdf";
+import { downloadBlob, generateSignedFilename } from "./lib/download";
+import type { PageDimensions } from "./types/placement";
 
 function App() {
   const { pdf, error, loadPdf, setPageCount, handleError, resetPdf } =
     usePdfFile();
   const { signature, loadSignature, removeSignature } = useSignatureAsset();
+  const {
+    placements,
+    selectedId,
+    addPlacement,
+    updatePlacement,
+    removePlacement,
+    selectPlacement,
+    clearPlacements,
+  } = useSignaturePlacement();
   const [showSignature, setShowSignature] = useState(false);
+  const [, setActivePage] = useState(0);
+  const [pageDimensions, setPageDimensions] = useState<
+    Record<number, PageDimensions>
+  >({});
+  const [isExporting, setIsExporting] = useState(false);
+  const isExportingRef = useRef(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  const handlePageDimensions = useCallback(
+    (pageIndex: number, dims: PageDimensions) => {
+      setPageDimensions((prev) => ({ ...prev, [pageIndex]: dims }));
+    },
+    [],
+  );
+
+  const handleResetPdf = useCallback(() => {
+    if (placements.length > 0 && !window.confirm("Reset will remove all signature placements. Continue?")) {
+      return;
+    }
+    resetPdf();
+    clearPlacements();
+    setActivePage(0);
+    setPageDimensions({});
+    setExportError(null);
+  }, [resetPdf, clearPlacements, placements.length]);
+
+  const handleExportPdf = useCallback(async () => {
+    if (!pdf || !signature || placements.length === 0 || isExportingRef.current) return;
+
+    isExportingRef.current = true;
+    setIsExporting(true);
+    setExportError(null);
+
+    try {
+      const signedBlob = await exportSignedPdf(
+        pdf.file,
+        signature.blob,
+        signature.mimeType,
+        placements,
+      );
+      const fileName = generateSignedFilename(pdf.file.name);
+      downloadBlob(signedBlob, fileName);
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.error("PDF export failed:", err);
+      }
+      setExportError("Failed to generate signed PDF. Please try again.");
+    } finally {
+      isExportingRef.current = false;
+      setIsExporting(false);
+    }
+  }, [pdf, signature, placements]);
+
+  const handleSignatureUpload = useCallback(
+    async (file: File) => {
+      if (!pdf) return;
+      try {
+        const asset = await loadSignature(file);
+        if (!asset) return;
+        clearPlacements();
+      } catch (err) {
+        if (import.meta.env.DEV) {
+          console.error("Signature load failed:", err);
+        }
+        setExportError("Failed to decode signature image. Ensure it is a valid PNG or JPEG.");
+      }
+    },
+    [loadSignature, clearPlacements, pdf],
+  );
+
+  const handleSignatureRemove = useCallback(() => {
+    removeSignature();
+    clearPlacements();
+    setExportError(null);
+  }, [removeSignature, clearPlacements]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        if (selectedId) {
+          selectPlacement(null);
+          return;
+        }
+        setShowSignature(false);
+        return;
+      }
+      if (event.key === "Delete" || event.key === "Backspace") {
+        const target = event.target as HTMLElement;
+        if (selectedId && !target.matches("input, textarea, [contenteditable=true]")) {
+          event.preventDefault();
+          removePlacement(selectedId);
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [selectedId, selectPlacement, removePlacement, showSignature]);
 
   useEffect(() => {
     if (!showSignature) return;
 
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setShowSignature(false);
-    };
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    document.addEventListener("keydown", handleKeyDown);
 
     return () => {
       document.body.style.overflow = previousOverflow;
-      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [showSignature]);
 
+  const [targetPageInput, setTargetPageInput] = useState("1");
+
+  const handleAddToTargetPage = useCallback(() => {
+    if (!signature || !pdf) return;
+    const page = Math.max(0, Math.min(Number(targetPageInput) - 1, pdf.pageCount - 1));
+    if (isNaN(page)) return;
+    const dims = pageDimensions[page];
+    if (!dims || dims.width <= 0 || dims.height <= 0) return;
+    addPlacement(page, dims.width, dims.height, signature.naturalWidth / signature.naturalHeight);
+  }, [signature, pdf, targetPageInput, pageDimensions, addPlacement]);
+
   const signaturePanel = (
-    <SignatureManager
-      signature={signature}
-      onSignatureUpload={loadSignature}
-      onSignatureRemove={removeSignature}
-    />
+    <div className="flex flex-col gap-4">
+      <SignatureManager
+        signature={signature}
+        onSignatureUpload={handleSignatureUpload}
+        onSignatureRemove={handleSignatureRemove}
+        disabled={!pdf}
+      />
+      {signature && pdf && (
+        <div className="border-t border-gray-200 pt-4">
+          <label className="mb-2 block text-xs font-medium text-gray-500">
+            Add signature to page
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min={1}
+              max={pdf.pageCount}
+              value={targetPageInput}
+              onChange={(e) => setTargetPageInput(e.target.value)}
+              className="w-16 rounded-lg border border-gray-300 px-2.5 py-2 text-sm text-gray-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            />
+            <button
+              type="button"
+              onClick={handleAddToTargetPage}
+              disabled={!pageDimensions[Math.max(0, Math.min(Number(targetPageInput) - 1, pdf.pageCount - 1))]}
+              className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+            >
+              Add to page
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={handleExportPdf}
+            disabled={placements.length === 0 || isExporting}
+            className="mt-3 w-full rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600"
+          >
+            {isExporting ? "Exporting..." : "Download PDF"}
+          </button>
+        </div>
+      )}
+    </div>
   );
 
   return (
@@ -52,7 +205,7 @@ function App() {
             <div className="mb-5 w-full rounded-lg border border-[#ffcccc] bg-[#ffebeb] px-4 py-3 text-sm text-[#ff3b30] sm:px-5">
               <p>{error}</p>
               <button
-                onClick={resetPdf}
+                onClick={handleResetPdf}
                 className="mt-2 underline hover:no-underline"
               >
                 Try a different file
@@ -86,26 +239,43 @@ function App() {
                         {pdf.file.name}
                       </p>
                       <p className="text-xs text-gray-400">
-                        {pdf.pageCount} {pdf.pageCount === 1 ? "page" : "pages"}
+                        {pdf.pageCount}{" "}
+                        {pdf.pageCount === 1 ? "page" : "pages"}
                       </p>
                     </div>
                     <button
-                      onClick={resetPdf}
+                      onClick={handleResetPdf}
                       className="shrink-0 rounded-md px-2 py-1 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700"
                     >
                       Reset
                     </button>
                   </div>
+
                   <PdfViewer
                     file={pdf.objectUrl}
                     pageCount={pdf.pageCount}
+                    signature={signature}
+                    placements={placements}
+                    selectedId={selectedId}
+                    pageDimensions={pageDimensions}
                     onLoadSuccess={setPageCount}
                     onLoadError={() =>
                       handleError(
                         "Unable to read this PDF. Make sure the file is valid and not password-protected.",
                       )
                     }
+                    onUpdatePlacement={updatePlacement}
+                    onSelectPlacement={selectPlacement}
+                    onRemovePlacement={removePlacement}
+                    onActivePageChange={setActivePage}
+                    onPageDimensions={handlePageDimensions}
                   />
+
+                  {exportError && (
+                    <div className="mb-4 rounded-lg border border-[#ffcccc] bg-[#ffebeb] px-4 py-2.5 text-xs text-[#ff3b30]">
+                      {exportError}
+                    </div>
+                  )}
                 </>
               )}
             </section>

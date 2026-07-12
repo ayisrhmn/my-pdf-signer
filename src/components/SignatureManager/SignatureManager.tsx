@@ -11,6 +11,7 @@ type Props = {
   signature: SignatureAsset | null;
   onSignatureUpload: (file: File) => void;
   onSignatureRemove: () => void;
+  disabled?: boolean;
 };
 
 const ACCEPT_STRING = ACCEPTED_SIGNATURE_MIME.join(",");
@@ -19,6 +20,7 @@ export default function SignatureManager({
   signature,
   onSignatureUpload,
   onSignatureRemove,
+  disabled = false,
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -26,6 +28,7 @@ export default function SignatureManager({
     useState<SignatureValidationError | null>(null);
 
   const handleFile = (file: File) => {
+    if (disabled) return;
     setValidationError(null);
     const result = validateSignatureFile(file);
     if (result.valid) {
@@ -79,13 +82,15 @@ export default function SignatureManager({
               <div className="flex gap-3 mt-2">
                 <button
                   onClick={() => inputRef.current?.click()}
-                  className="text-xs text-blue-600 hover:text-blue-700 underline"
+                  disabled={disabled}
+                  className="text-xs text-blue-600 hover:text-blue-700 underline disabled:text-gray-300 disabled:cursor-not-allowed"
                 >
                   Replace
                 </button>
                 <button
                   onClick={onSignatureRemove}
-                  className="text-xs text-red-500 hover:text-red-600 underline"
+                  disabled={disabled}
+                  className="text-xs text-red-500 hover:text-red-600 underline disabled:text-gray-300 disabled:cursor-not-allowed"
                 >
                   Remove
                 </button>
@@ -95,27 +100,40 @@ export default function SignatureManager({
         </div>
       ) : (
         <div
-          className={`rounded-xl border-2 border-dashed p-4 text-center transition-colors cursor-pointer ${
-            isDragOver
-              ? "border-blue-400 bg-blue-50"
-              : "border-gray-300 bg-white hover:border-gray-400"
+          className={`rounded-xl border-2 border-dashed p-4 text-center transition-colors ${
+            disabled
+              ? "border-gray-200 bg-gray-50 cursor-not-allowed"
+              : isDragOver
+                ? "border-blue-400 bg-blue-50 cursor-pointer"
+                : "border-gray-300 bg-white hover:border-gray-400 cursor-pointer"
           }`}
-          onClick={() => inputRef.current?.click()}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
+          onClick={() => {
+            if (!disabled) inputRef.current?.click();
+          }}
+          onDragOver={disabled ? undefined : handleDragOver}
+          onDragLeave={disabled ? undefined : handleDragLeave}
+          onDrop={disabled ? undefined : handleDrop}
           role="button"
-          tabIndex={0}
+          tabIndex={disabled ? -1 : 0}
+          aria-disabled={disabled}
           onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ")
+            if (!disabled && (e.key === "Enter" || e.key === " "))
               inputRef.current?.click();
           }}
-          aria-label="Upload signature image"
+          aria-label={disabled ? "Upload PDF first" : "Upload signature image"}
         >
-          <p className="text-sm text-gray-500 mb-1">
-            Drop your signature image here
-          </p>
-          <p className="text-xs text-gray-400">PNG or JPEG, max 5 MB</p>
+          {disabled ? (
+            <p className="text-sm text-gray-400 mb-1">
+              Upload a PDF first
+            </p>
+          ) : (
+            <>
+              <p className="text-sm text-gray-500 mb-1">
+                Drop your signature image here
+              </p>
+              <p className="text-xs text-gray-400">PNG or JPEG, max 5 MB</p>
+            </>
+          )}
         </div>
       )}
 
